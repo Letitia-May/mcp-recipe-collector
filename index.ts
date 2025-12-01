@@ -12,7 +12,7 @@ server.registerTool(
   {
     title: 'Search recipes by term',
     description:
-      'Retrieves a list of recipes that have the search term in their title or in their ingredients list.',
+      'Retrieves a list of recipes that have the search term in their title or in their ingredients list. If there is only one recipe that matches the search term, the full recipe details are returned instead of a list.',
     inputSchema: {
       term: z.string().describe('The search term to filter recipes.'),
     },
@@ -56,6 +56,84 @@ server.registerTool(
       throw new Error(
         `Failed to get recipe ${params.id}: ${response.status} ${response.statusText}`
       );
+    }
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(await response.json(), null, 2),
+        },
+      ],
+    };
+  }
+);
+
+server.registerTool(
+  'addRecipe',
+  {
+    title: 'Add a new recipe',
+    description:
+      'Adds a new recipe to the collection from a given URL. Provide recipe details including title, ingredients, and cooking steps.',
+    inputSchema: {
+      title: z.string().describe('The title of the recipe.'),
+      description: z.string().optional().describe('A description of the recipe.'),
+      time: z
+        .string()
+        .optional()
+        .describe('The time required to make the recipe (e.g., "30 minutes").'),
+      servings: z.string().optional().describe('Number of servings the recipe makes.'),
+      url: z.string().url().optional().describe('URL to the original recipe.'),
+      notes: z.string().optional().describe('Additional notes about the recipe.'),
+      timesCooked: z.number().optional().describe('Number of times this recipe has been cooked.'),
+      ingredientSections: z
+        .array(
+          z.object({
+            heading: z
+              .string()
+              .optional()
+              .describe('Optional heading for this ingredient section.'),
+            ingredients: z.array(z.string()).describe('List of ingredients.'),
+          })
+        )
+        .describe('Sections of ingredients for the recipe.'),
+      steps: z
+        .array(
+          z.object({
+            number: z.number().describe('Step number.'),
+            description: z.string().describe('Description of the step.'),
+          })
+        )
+        .describe('Cooking steps for the recipe.'),
+    },
+  },
+  async (params: {
+    title: string;
+    description?: string;
+    time?: string;
+    servings?: string;
+    url?: string;
+    notes?: string;
+    timesCooked?: number;
+    ingredientSections: Array<{
+      heading?: string;
+      ingredients: string[];
+    }>;
+    steps: Array<{
+      number: number;
+      description: string;
+    }>;
+  }) => {
+    const response = await fetch(`http://127.0.0.1:8080/recipes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(params),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to add recipe: ${response.status} ${response.statusText}`);
     }
 
     return {
