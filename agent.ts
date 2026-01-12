@@ -97,35 +97,65 @@ async function runAgent(userPrompt: string) {
   console.log('🤖 Recipe Agent Starting...\n');
   console.log(`User: ${userPrompt}\n`);
 
-  const result = await generateText({
-    model: openai('gpt-4o'),
-    tools: recipeTools,
-    prompt: userPrompt,
-  });
-
-  console.log(`\n🤖 Agent: ${result.text}\n`);
-
-  if (result.steps.length > 1) {
-    console.log('\n📝 Tool Calls Made:');
-    result.steps.forEach((step, index) => {
-      if (step.toolCalls && step.toolCalls.length > 0) {
-        step.toolCalls.forEach((toolCall) => {
-          console.log(`  ${index}. ${toolCall.toolName}`);
-        });
-      }
+  try {
+    const result = await generateText({
+      model: openai('gpt-4o'),
+      tools: recipeTools,
+      prompt: userPrompt,
+      stopWhen: () => false, // Continue until the model decides it's done
     });
-  }
 
-  return result;
+    console.log(`\n🤖 Agent: ${result.text}\n`);
+
+    if (result.steps.length > 1) {
+      console.log('\n📝 Tool Calls Made:');
+      result.steps.forEach((step, index) => {
+        if (step.toolCalls && step.toolCalls.length > 0) {
+          step.toolCalls.forEach((toolCall) => {
+            console.log(`  ${index}. ${toolCall.toolName}`);
+          });
+        }
+      });
+    }
+
+    return result;
+  } catch (error: any) {
+    console.error('\n❌ Error in agent:');
+
+    if (error?.message?.includes('401') || error?.message?.includes('authentication')) {
+      console.error('  → Invalid OpenAI API key. Check your OPENAI_API_KEY in .env');
+    } else if (
+      error?.message?.includes('429') ||
+      error?.message?.includes('quota') ||
+      error?.message?.includes('insufficient_quota')
+    ) {
+      console.error(
+        '  → OpenAI API quota exceeded. Check your billing at https://platform.openai.com/account/billing'
+      );
+    } else {
+      console.error('  →', error?.message || error);
+    }
+
+    throw error;
+  }
 }
 
 async function main() {
-  const prompt = process.argv[2] || 'Search for recipes with chicken';
+  if (!process.env.OPENAI_API_KEY) {
+    console.error('❌ Error: OPENAI_API_KEY not found in environment variables');
+    process.exit(1);
+  }
+
+  const prompt = process.argv[2];
+
+  if (!prompt) {
+    console.error('❌ Error: Please provide a prompt');
+    process.exit(1);
+  }
 
   try {
     await runAgent(prompt);
   } catch (error) {
-    console.error('Error running agent:', error);
     process.exit(1);
   }
 }
