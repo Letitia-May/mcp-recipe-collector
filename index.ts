@@ -2,6 +2,9 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 
+// MCP Server that exposes recipe tools to external clients (e.g., GitHub Copilot (VS Code), Claude Desktop).
+// Note: The agent in agent.ts operates independently and doesn't use this server.
+
 const server = new McpServer({
   name: 'recipe-collector-server',
   version: '1.0.0',
