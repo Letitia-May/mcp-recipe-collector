@@ -8,7 +8,9 @@
     "inspect": "npx @modelcontextprotocol/inspector",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "agent": "tsx agent.ts"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
   "keywords": [],
   "author": "",
@@ -16,16 +18,22 @@
   "type": "module",
   "devDependencies": {
     "@modelcontextprotocol/inspector": "^0.15.0",
-    "@types/node": "^24.8.1",
+    "@types/node": "^24.10.7",
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
     "prettier": "^3.7.3",
     "tsx": "^4.21.0",
     "typescript": "^5.9.2"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.7",
+    "@ai-sdk/react": "^3.0.29",
     "@modelcontextprotocol/sdk": "^1.20.1",
     "ai": "^6.0.27",
     "dotenv": "^17.2.3",
+    "next": "^16.1.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "zod": "^3.25.76"
   }
 }
